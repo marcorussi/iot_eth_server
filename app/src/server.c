@@ -119,12 +119,12 @@ void SERVER_Init( void )
 
 	/* set calendar date and time */
 	calendarInfoStruct.year = 0x18;
-	calendarInfoStruct.month = 0x05;
-	calendarInfoStruct.day = 0x13;
+	calendarInfoStruct.month = 0x07;
+	calendarInfoStruct.day = 0x01;
 	calendarInfoStruct.weekday = 7;
-	calendarInfoStruct.hours = 0x09;
-	calendarInfoStruct.minutes = 0x57;
-	calendarInfoStruct.seconds = 0x45;
+	calendarInfoStruct.hours = 0x10;
+	calendarInfoStruct.minutes = 0x00;
+	calendarInfoStruct.seconds = 0x00;
 
 	/* init calendar */
 	CALENDAR_Init(&calendarInfoStruct);

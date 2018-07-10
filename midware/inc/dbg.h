@@ -36,7 +36,7 @@
 
 
 
-#define DBG_UART_BUFFER_MSG_LENGTH				50
+#define DBG_UART_BUFFER_MSG_LENGTH				100
 
 
 
