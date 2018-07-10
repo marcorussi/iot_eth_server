@@ -74,7 +74,7 @@
 #define ETHERNET_DST_IPADDR3                         	40
 
 /* The destination port number */
-#define ETHERNET_DST_PORT                      			5060
+#define ETHERNET_DST_PORT                      			10000
 
 /* The network mask being used. */
 #define ETHERNET_CONF_NET_MASK0                       255

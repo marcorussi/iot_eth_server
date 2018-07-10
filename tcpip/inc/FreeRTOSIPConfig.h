@@ -244,7 +244,7 @@ extern void vLoggingPrintf( const char * pcFormatString,
  * lower value can save RAM, depending on the buffer management scheme used.  If
  * ipconfigCAN_FRAGMENT_OUTGOING_PACKETS is 1 then (ipconfigNETWORK_MTU - 28) must
  * be divisible by 8. */
-#define ipconfigNETWORK_MTU                            600
+#define ipconfigNETWORK_MTU                            586
 
 /* Set ipconfigUSE_DNS to 1 to include a basic DNS client/resolver.  DNS is used
  * through the FreeRTOS_gethostbyname() API function. */

@@ -86,9 +86,9 @@ static const uint8_t ucDNSServerAddress[ 4 ] = { 	ETHERNET_CONF_DNS_SERVER_ADDR0
 
 const char hostname_string[] = "iot_server.local";
 
-const char on_conn_string[] = "IoT Server... connected! Press Enter\r\n";
+const char on_conn_string[] = "Connected to IoT Server! Press Enter...\r\n";
 
-const char reply_string[] = "* %s|%s [T: %d - H: %d]\r\n";
+const char reply_string[] = "* %d | %s | %s - put your sensors data here\r\n";
 
 static char DbgData[DBG_UART_BUFFER_MSG_LENGTH];
 
@@ -128,6 +128,8 @@ void SERVER_Init( void )
 
 	/* init calendar */
 	CALENDAR_Init(&calendarInfoStruct);
+
+   DBG_sendString("Server initialised!\r\n", (uint8_t)21);
 }
 
 
@@ -177,7 +179,7 @@ void SERVER_Task( void const *argument )
 								sizeof( xReceiveTimeOut ) );
 
 	/* Set the listening port */
-	xBindAddress.sin_port = ( uint16_t ) 10000;
+	xBindAddress.sin_port = ( uint16_t )ETHERNET_DST_PORT;
 	xBindAddress.sin_port = FreeRTOS_htons( xBindAddress.sin_port );
 
 	/* Bind the socket to the port that the client RTOS task will send to. */
@@ -194,13 +196,15 @@ void SERVER_Task( void const *argument )
 		configASSERT( xConnectedSocket != FREERTOS_INVALID_SOCKET );
 
 		DBG_sendString("Connection established!\r\n", (uint8_t)25);
-
 		FreeRTOS_send(xConnectedSocket, on_conn_string, strlen(on_conn_string), 0);
 
 		/* Spawn a RTOS task to handle the connection. */
 		osThreadDef(TCP_DATA_TASK, vTCPRxDataTask, osPriorityNormal, 0, 512);
 		(void)osThreadCreate(osThread(TCP_DATA_TASK), (void *)xConnectedSocket);
 	}
+
+   /* Must not drop off the end of the RTOS task - delete the RTOS task. */
+	vTaskDelete( NULL );
 }
 
 
@@ -241,8 +245,9 @@ void vTCPRxDataTask( void const *argument )
 	BaseType_t lBytesReceived;
 	uint8_t dateBuffer[CALENDAR_BUFF_SIZE];
 	uint8_t timeBuffer[CALENDAR_BUFF_SIZE];
-	static char RxData[ TCP_DATA_BUFFER_SIZE ];
-	static char TxData[ TCP_DATA_BUFFER_SIZE ];
+	static char RxData[TCP_DATA_BUFFER_SIZE];
+	static char TxData[TCP_DATA_BUFFER_SIZE];
+   static uint8_t counter = 0;
 
 	for( ;; )
 	{
@@ -252,25 +257,26 @@ void vTCPRxDataTask( void const *argument )
 		if( lBytesReceived > 0 )
 		{
 			CALENDAR_getDate((char *)dateBuffer);
-
 			CALENDAR_getTime((char *)timeBuffer);
-
-			sprintf(TxData, reply_string, dateBuffer, timeBuffer, 25, 56);
+			sprintf(TxData, reply_string, ++counter, dateBuffer, timeBuffer);
 
 			DBG_sendString(TxData, strlen(TxData));
-
 			FreeRTOS_send((Socket_t *)argument, TxData, strlen(TxData), 0);
 		}
 		else if( lBytesReceived == 0 )
 		{
 			/* No data was received, but FreeRTOS_recv() did not return an error. Timeout? */
+			DBG_sendString("\r\n - No received data!\r\n", 15);
 		}
 		else
 		{
-			 /* Error (maybe the connected socket already shut down the socket?).
-			 Attempt graceful shutdown. */
-			 FreeRTOS_shutdown( (Socket_t *)argument, FREERTOS_SHUT_RDWR );
-			 break;
+         sprintf(TxData, "\r\n - Done! %d\r\n", lBytesReceived);
+			DBG_sendString(TxData, strlen(TxData));
+
+         /* Error (maybe the connected socket already shut down the socket?).
+         Attempt graceful shutdown. */
+         FreeRTOS_shutdown( (Socket_t *)argument, FREERTOS_SHUT_RDWR );
+         break;
 		}
 	}
 

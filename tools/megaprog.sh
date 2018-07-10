@@ -7,6 +7,7 @@ usage:
 megaprog.sh <action> [hexfile]
 where action is one of
   --flash-hex
+  --erase
 EOF
 
 HEX=$2
