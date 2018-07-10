@@ -201,6 +201,10 @@ flash:
 	@echo Flashing: $(OUTPUT_BINARY_DIRECTORY)/$(OUTPUT_FILENAME).hex
 	$(TOOLS_FOLDER)/megaprog.sh --flash-hex $(OUTPUT_BINARY_DIRECTORY)/$(OUTPUT_FILENAME).hex
 
+erase:
+	@echo Erasing...
+	$(TOOLS_FOLDER)/megaprog.sh --erase
+
 
 
 
