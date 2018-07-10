@@ -49,17 +49,17 @@
 
 
 
-#define PHY_REG_00_BMCR            			0x00 // Basic mode control register
-#define PHY_REG_01_BMSR            			0x01 // Basic mode status register
-#define PHY_REG_02_PHYSID1         			0x02 // PHYS ID 1
-#define PHY_REG_03_PHYSID2         			0x03 // PHYS ID 2
-#define PHY_REG_04_ADVERTISE       			0x04 // Advertisement control reg
-#define PHY_REG_05_LPA             			0x05 // Link partner ability reg
-#define PHY_REG_06_ANER            			0x06 //	6	RW		Auto-Negotiation Expansion Register
-#define PHY_REG_07_ANNPTR          			0x07 //	7	RW		Auto-Negotiation Next Page TX
-#define PHY_REG_08_RESERVED0       			0x08 // 0x08..0x0Fh	8-15	RW		RESERVED
+#define PHY_REG_00_BMCR            			0x00     /* Basic mode control register */
+#define PHY_REG_01_BMSR            			0x01     /* Basic mode status register */
+#define PHY_REG_02_PHYSID1         			0x02     /* PHYS ID 1 */
+#define PHY_REG_03_PHYSID2         			0x03     /* PHYS ID 2 */
+#define PHY_REG_04_ADVERTISE       			0x04     /* Advertisement control reg */
+#define PHY_REG_05_LPA             			0x05     /* Link partner ability reg */
+#define PHY_REG_06_ANER            			0x06     /*	6	RW		Auto-Negotiation Expansion Register */
+#define PHY_REG_07_ANNPTR          			0x07     /*	7	RW		Auto-Negotiation Next Page TX */
+#define PHY_REG_08_RESERVED0       			0x08     /* 0x08..0x0Fh	8-15	RW		RESERVED */
 
-#define BMSR_LINK_STATUS            		0x0004  //!< Link status
+#define BMSR_LINK_STATUS            		0x0004   /* Link status */
 
 #ifndef PHY_LS_HIGH_CHECK_TIME_MS
 	/* Check if the LinkSStatus in the PHY is still high after 15 seconds of not
@@ -156,11 +156,7 @@ typedef struct
 
 
 
-//TODO: check this alignment
-//COMPILER_ALIGNED(8)
 static xKSZ8851_Device_t xMicrelDevice;
-
-//static TaskHandle_t xTransmitHandle;
 
 /* Bit map of outstanding ETH interrupt events for processing.  Currently only
 	the Rx interrupt is handled, although code is included for other events to
@@ -340,7 +336,6 @@ static BaseType_t xGMACWaitLS( TickType_t xMaxTime )
 	BaseType_t xReturn;
 	const TickType_t xShortTime = pdMS_TO_TICKS( 100UL );
 
-	//TODO: implement a while loop instead of an infinite for
 	for( ;; )
 	{
 		xEndTime = xTaskGetTickCount();
@@ -474,13 +469,10 @@ static void ksz8851snl_rx_populate_queue( void )
 			pxNetworkBuffer = pxGetNetworkBufferWithDescriptor( ipconfigNETWORK_MTU + 36, 100 );
 			if( pxNetworkBuffer == NULL )
 			{
-				//fail...
-            FreeRTOS_printf( ( "ksz8851snl_rx_populate_queue: NetworkBufferDescriptor_t allocation failure\n" ) );
+				/* fail... */
+            FreeRTOS_printf( "ksz8851snl_rx_populate_queue: NetworkBufferDescriptor_t allocation failure\r\n" );
 				configASSERT( 1 == 2 );
 			}
-
-			/* Make sure lwIP is well configured so one NetworkBufferDescriptor_t can contain the maximum packet size. */
-			//LWIP_ASSERT("ksz8851snl_rx_populate_queue: NetworkBufferDescriptor_t size too small!", pbuf_clen(pxNetworkBuffer) <= 1);
 
 			/* Save NetworkBufferDescriptor_t pointer to be sent to lwIP upper layer. */
 			xMicrelDevice.rx_buffers[ ul_index ] = pxNetworkBuffer;
@@ -518,7 +510,7 @@ static void ksz8851snl_update()
 
 			xMicrelDevice.tx_space = ksz8851_reg_read( REG_TX_MEM_INFO ) & TX_MEM_AVAILABLE_MASK;
 
-         FreeRTOS_printf( ("SPI_PDC_TX_ERROR %02X\n", ulValue ) );
+         FreeRTOS_printf( "SPI_PDC_TX_ERROR\r\n" );
 		}
 		break;
 
@@ -542,7 +534,7 @@ static void ksz8851snl_update()
 
 			xGMACWaitLS( pdMS_TO_TICKS( 5000UL ) );
 
-         FreeRTOS_printf( ("SPI_PDC_RX_ERROR %02X\n", ulValue ) );
+         FreeRTOS_printf( "SPI_PDC_RX_ERROR\r\n" );
 		}
 		break;
 	}
@@ -586,9 +578,9 @@ static void ksz8851snl_update()
 				/* Don't break Micrel state machine, wait for a free descriptor first! */
 				if( xMicrelDevice.rx_ready[ rxHead ] != pdFALSE )
 				{
-               FreeRTOS_printf(  ( "ksz8851snl_update: out of free descriptor! [tail=%u head=%u]\n",
-							            xMicrelDevice.us_rx_tail, 
-                                 rxHead ) );
+               FreeRTOS_printf(  "ksz8851snl_update: out of free descriptor! [tail=%u head=%u]\r\n",
+							            (unsigned int)xMicrelDevice.us_rx_tail, 
+                                 (unsigned int)rxHead );
 					return;
 				}
 
@@ -596,7 +588,7 @@ static void ksz8851snl_update()
 				if( pxNetworkBuffer == NULL )
 				{
 					ksz8851snl_rx_populate_queue();
-               FreeRTOS_printf( ( "ksz8851snl_update: no buffer set [head=%u]\n", rxHead ) );
+               FreeRTOS_printf( "ksz8851snl_update: no buffer set [head=%u]\r\n", rxHead );
 					return;
 				}
 
@@ -605,7 +597,7 @@ static void ksz8851snl_update()
 				if( ( ( fhr_status & RX_VALID ) == 0 ) || ( ( fhr_status & RX_ERRORS ) != 0 ) )
 				{
 					ksz8851_reg_setbits(REG_RXQ_CMD, RXQ_CMD_FREE_PACKET);
-               FreeRTOS_printf( ( "ksz8851snl_update: RX packet error!\n" ) );
+               FreeRTOS_printf( "ksz8851snl_update: RX packet error!\r\n" );
 
 					/* RX step4-5: check for received frames. */
 					xMicrelDevice.us_pending_frame = ksz8851_reg_read(REG_RX_FRAME_CNT_THRES) >> 8;
@@ -626,7 +618,7 @@ static void ksz8851snl_update()
 					if( xLength == 0 )
 					{
 						ksz8851_reg_setbits( REG_RXQ_CMD, RXQ_CMD_FREE_PACKET );
-                  FreeRTOS_printf( ( "ksz8851snl_update: RX bad len!\n" ) );
+                  FreeRTOS_printf( "ksz8851snl_update: RX bad len!\r\n" );
 						ulISREvents |= EMAC_IF_ERR_EVENT;
 					}
 					else
@@ -677,7 +669,7 @@ static void ksz8851snl_update()
 
 				if( txmir < ( xLength + 8 ) )
 				{
-					//TODO: space can be requested and interrupt is then generated when available...
+					/* ATTENTION: please note that space can be requested and interrupt is then generated when available... */
 					/* wait... */
 				}
 				else
@@ -748,7 +740,9 @@ static void ksz8851snl_update()
 			ksz8851_reg_setbits( REG_TXQ_CMD, TXQ_ENQUEUE );
 
 			/* RX step13: enable INT_RX flag. */
+         /* ATTENTION: commented out */
 			//ksz8851_reg_write( REG_INT_MASK, INT_RX );
+
 			/* Buffer sent, free the corresponding buffer and mark descriptor as owned by software. */
 			vReleaseNetworkBufferAndDescriptor( pxNetworkBuffer );
 
@@ -760,10 +754,6 @@ static void ksz8851snl_update()
 			}
 
 			xMicrelDevice.us_tx_tail = txTail;
-			//if( xTransmitHandle != NULL )
-			//{
-			//	xTaskNotifyGive( xTransmitHandle );
-			//}
 
 			/* RX step13: enable INT_RX flag. */
 			ksz8851_reg_write( REG_INT_MASK, INT_RX );
@@ -821,8 +811,8 @@ static void ksz8851snl_low_level_init( void )
 	/* init SPI link. */
 	if( false == ksz8851snl_init() )
 	{
-		//fail...
-      FreeRTOS_printf( ( "ksz8851snl_low_level_init: failed to initialize the Micrel driver!\n" ) );
+		/* fail... */
+      FreeRTOS_printf( "ksz8851snl_low_level_init: failed to initialize the Micrel driver!\r\n" );
 		configASSERT(0 == 1);
 	}
 
@@ -883,7 +873,7 @@ static uint32_t prvEMACRxPoll( void )
 		if( ( pxEthernetHeader->usFrameType != ipIPv4_FRAME_TYPE ) &&
 			( pxEthernetHeader->usFrameType != ipARP_FRAME_TYPE	) )
 		{
-			FreeRTOS_printf( ( "Frame type %02X received\n", pxEthernetHeader->usFrameType ) );
+			FreeRTOS_printf( "Frame type %02X received\r\n", pxEthernetHeader->usFrameType );
 		}
 
 		ulReturnValue++;
@@ -894,7 +884,7 @@ static uint32_t prvEMACRxPoll( void )
 		{
 			vReleaseNetworkBufferAndDescriptor( pxNetworkBuffer );
          iptraceETHERNET_RX_EVENT_LOST();
-			FreeRTOS_printf( ( "prvEMACRxPoll: Can not queue return packet!\n" ) );
+			FreeRTOS_printf( "prvEMACRxPoll: Can not queue return packet!\r\n" );
 		}
 	}
 
@@ -930,9 +920,9 @@ static void prvEMACHandlerTask( void *pvParameters )
 			/* The logging produced below may be helpful
 			while tuning +TCP: see how many buffers are in use. */
 			uxLastMinBufferCount = uxCurrentCount;
-			FreeRTOS_printf(  ( "Network buffers: %lu lowest %lu\n",
+			FreeRTOS_printf(  "Network buffers: %lu lowest %lu\r\n",
 				               uxGetNumberOfFreeNetworkBuffers(), 
-                           uxCurrentCount ) );
+                           uxCurrentCount );
 		}
 
 		#if( ipconfigCHECK_IP_QUEUE_SPACE != 0 )
@@ -943,7 +933,7 @@ static void prvEMACHandlerTask( void *pvParameters )
 				/* The logging produced below may be helpful
 				while tuning +TCP: see how many buffers are in use. */
 				uxLastMinQueueSpace = uxCurrentCount;
-				FreeRTOS_printf( ( "Queue space: lowest %lu\n", uxCurrentCount ) );
+				FreeRTOS_printf( "Queue space: lowest %lu\r\n", uxCurrentCount );
 			}
 		}
 		#endif /* ipconfigCHECK_IP_QUEUE_SPACE */
@@ -960,9 +950,9 @@ static void prvEMACHandlerTask( void *pvParameters )
       if( ( xTaskGetTickCount() - xLoggingTime ) > 10000 )
 		{
 			xLoggingTime += 10000;
-			FreeRTOS_printf(  ( "Now Tx/Rx %7d /%7d\n",
-				               xMicrelDevice.ul_total_tx, 
-                           xMicrelDevice.ul_total_rx ) );
+			FreeRTOS_printf(  "Now Tx/Rx %7d /%7d\r\n",
+				               (int)xMicrelDevice.ul_total_tx, 
+                           (int)xMicrelDevice.ul_total_rx );
 		}
 
 		if( ( ulISREvents & EMAC_IF_RX_EVENT ) != 0 )
@@ -1005,7 +995,7 @@ static void prvEMACHandlerTask( void *pvParameters )
 			if( ( ulPHYLinkStatus & BMSR_LINK_STATUS ) != ( xStatus & BMSR_LINK_STATUS ) )
 			{
 				ulPHYLinkStatus = xStatus;
-            FreeRTOS_printf( ( "prvEMACHandlerTask: PHY LS now %d\n", ( ulPHYLinkStatus & BMSR_LINK_STATUS ) != 0 ) );
+            FreeRTOS_printf( "prvEMACHandlerTask: PHY LS now %d\r\n", ( ulPHYLinkStatus & BMSR_LINK_STATUS ) != 0 );
 			}
 
 			vTaskSetTimeOutState( &xPhyTime );

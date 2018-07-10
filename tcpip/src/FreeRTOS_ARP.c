@@ -630,7 +630,7 @@ void FreeRTOS_ClearARP( void )
 			if( ( xARPCache[ x ].ulIPAddress != 0ul ) && ( xARPCache[ x ].ucAge > 0U ) )
 			{
 				/* See if the MAC-address also matches, and we're all happy */
-				FreeRTOS_printf( ( "Arp %2ld: %3u - %16lxip : %02x:%02x:%02x : %02x:%02x:%02x\n",
+				FreeRTOS_printf(  "Arp %2ld: %3u - %16lxip : %02x:%02x:%02x : %02x:%02x:%02x\r\n",
 					x,
 					xARPCache[ x ].ucAge,
 					xARPCache[ x ].ulIPAddress,
@@ -639,12 +639,12 @@ void FreeRTOS_ClearARP( void )
 					xARPCache[ x ].xMACAddress.ucBytes[2],
 					xARPCache[ x ].xMACAddress.ucBytes[3],
 					xARPCache[ x ].xMACAddress.ucBytes[4],
-					xARPCache[ x ].xMACAddress.ucBytes[5] ) );
+					xARPCache[ x ].xMACAddress.ucBytes[5]  );
 				xCount++;
 			}
 		}
 
-		FreeRTOS_printf( ( "Arp has %ld entries\n", xCount ) );
+		FreeRTOS_printf(  "Arp has %ld entries\r\n", xCount  );
 	}
 
 #endif /* ( ipconfigHAS_PRINTF != 0 ) || ( ipconfigHAS_DEBUG_PRINTF != 0 ) */

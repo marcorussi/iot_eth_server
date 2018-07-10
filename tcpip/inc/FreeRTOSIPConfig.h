@@ -35,7 +35,7 @@
 #define FREERTOS_IP_CONFIG_H
 
 #include <stdio.h>
-
+#include "dbg.h"
 #include "rand.h"
 
 
@@ -57,9 +57,13 @@ extern void vLoggingPrintf( const char * pcFormatString,
  * FreeRTOS_netstat() command, and ping replies.  If ipconfigHAS_PRINTF is set to 1
  * then FreeRTOS_printf should be set to the function used to print out the
  * messages. */
-#define ipconfigHAS_PRINTF    0
+#define ipconfigHAS_PRINTF    1
 #if ( ipconfigHAS_PRINTF == 1 )
-    #define FreeRTOS_printf( X )    configPRINTF( X )
+   #define FreeRTOS_printf( ... )         {																				\
+														   char DbgData[DBG_UART_BUFFER_MSG_LENGTH];						\
+														   sprintf(DbgData, __VA_ARGS__);									\
+													      DBG_sendString(DbgData, (uint8_t)strlen(DbgData));			\
+													   }
 #endif
 
 /* Define the byte order of the target MCU (the MCU FreeRTOS+TCP is executing

@@ -40,6 +40,5 @@ Insert command 's' for searching your device and then connect with command 'c' b
 * implement a proper rand function
 * add mDNS service
 * improve README file: add pinout and connections between boards
-* link FreeRTOS printf function to DBG UART module
 
 

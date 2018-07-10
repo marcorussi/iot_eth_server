@@ -3374,11 +3374,11 @@ void vSocketWakeUpUser( FreeRTOS_Socket_t *pxSocket )
 
 		if( listLIST_IS_INITIALISED( &xBoundTCPSocketsList ) == pdFALSE )
 		{
-			FreeRTOS_printf( ( "PLUS-TCP not initialized\n" ) );
+			FreeRTOS_printf(  "PLUS-TCP not initialized\r\n"  );
 		}
 		else
 		{
-			FreeRTOS_printf( ( "Prot Port IP-Remote       : Port  R/T Status       Alive  tmout Child\n" ) );
+			FreeRTOS_printf(  "Prot Port IP-Remote       : Port  R/T Status       Alive  tmout Child\r\n"  );
 			for( pxIterator  = ( ListItem_t * ) listGET_HEAD_ENTRY( &xBoundTCPSocketsList );
 				 pxIterator != ( ListItem_t * ) listGET_END_MARKER( &xBoundTCPSocketsList );
 				 pxIterator  = ( ListItem_t * ) listGET_NEXT( pxIterator ) )
@@ -3403,7 +3403,7 @@ void vSocketWakeUpUser( FreeRTOS_Socket_t *pxSocket )
 				}
 				if( age > 999999 )
 					age = 999999;
-				FreeRTOS_printf( ( "TCP %5d %-16lxip:%5d %d/%d %-13.13s %6lu %6u%s\n",
+				FreeRTOS_printf(  "TCP %5d %-16lxip:%5d %d/%d %-13.13s %6lu %6u%s\r\n",
 					pxSocket->usLocalPort,		/* Local port on this machine */
 					pxSocket->u.xTCP.ulRemoteIP,	/* IP address of remote machine */
 					pxSocket->u.xTCP.usRemotePort,	/* Port on remote machine */
@@ -3412,7 +3412,7 @@ void vSocketWakeUpUser( FreeRTOS_Socket_t *pxSocket )
 					FreeRTOS_GetTCPStateName( pxSocket->u.xTCP.ucTCPState ),
 					age,
 					pxSocket->u.xTCP.usTimeout,
-					ucChildText ) );
+					ucChildText  );
 					/* Remove compiler warnings if FreeRTOS_debug_printf() is not defined. */
 					( void ) pxHandleReceive;
 				count++;
@@ -3423,16 +3423,16 @@ void vSocketWakeUpUser( FreeRTOS_Socket_t *pxSocket )
 				 pxIterator  = ( ListItem_t * ) listGET_NEXT( pxIterator ) )
 			{
 				/* Local port on this machine */
-				FreeRTOS_printf( ( "UDP Port %5u\n",
-					FreeRTOS_ntohs( listGET_LIST_ITEM_VALUE( pxIterator ) ) ) );
+				FreeRTOS_printf(  "UDP Port %5u\r\n",
+					FreeRTOS_ntohs( listGET_LIST_ITEM_VALUE( pxIterator ) )  );
 				count++;
 			}
 
-			FreeRTOS_printf( ( "FreeRTOS_netstat: %lu sockets %lu < %lu < %d buffers free\n",
+			FreeRTOS_printf(  "FreeRTOS_netstat: %lu sockets %lu < %lu < %d buffers free\r\n",
 				count,
 				uxGetMinimumFreeNetworkBuffers( ),
 				uxGetNumberOfFreeNetworkBuffers( ),
-				ipconfigNUM_NETWORK_BUFFER_DESCRIPTORS ) );
+				ipconfigNUM_NETWORK_BUFFER_DESCRIPTORS  );
 		}
 	}
 

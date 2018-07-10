@@ -2025,7 +2025,7 @@ EthernetHeader_t *pxEthernetHeader;
 		{
 		BaseType_t xIndex;
 
-			FreeRTOS_printf( ( "vReturnEthernetFrame: length %lu\n", ( uint32_t )pxNetworkBuffer->xDataLength ) );
+			FreeRTOS_printf(  "vReturnEthernetFrame: length %lu\r\n", ( uint32_t )pxNetworkBuffer->xDataLength  );
 			for( xIndex = ( BaseType_t ) pxNetworkBuffer->xDataLength; xIndex < ( BaseType_t ) ipconfigETHERNET_MINIMUM_PACKET_BYTES; xIndex++ )
 			{
 				pxNetworkBuffer->pucEthernetBuffer[ xIndex ] = 0u;

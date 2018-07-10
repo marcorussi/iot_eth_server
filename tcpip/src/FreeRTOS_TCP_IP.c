@@ -3124,11 +3124,11 @@ FreeRTOS_Socket_t *pxReturn;
 
 		if( pxSocket->u.xTCP.usChildCount >= pxSocket->u.xTCP.usBacklog )
 		{
-			FreeRTOS_printf( ( "Check: Socket %u already has %u / %u child%s\n",
+			FreeRTOS_printf(  "Check: Socket %u already has %u / %u child%s\r\n",
 				pxSocket->usLocalPort,
 				pxSocket->u.xTCP.usChildCount,
 				pxSocket->u.xTCP.usBacklog,
-				pxSocket->u.xTCP.usChildCount == 1 ? "" : "ren" ) );
+				pxSocket->u.xTCP.usChildCount == 1 ? "" : "ren"  );
 			prvTCPSendReset( pxNetworkBuffer );
 		}
 		else
