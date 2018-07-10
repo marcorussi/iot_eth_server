@@ -41,6 +41,5 @@ Insert command 's' for searching your device and then connect with command 'c' b
 * add mDNS service
 * improve README file: add pinout and connections between boards
 * link FreeRTOS printf function to DBG UART module
-* add FreeRTOS printf debug functions to NetworkInterface module
 
 

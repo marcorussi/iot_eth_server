@@ -270,7 +270,7 @@ void vTCPRxDataTask( void const *argument )
 		}
 		else
 		{
-         sprintf(TxData, "\r\n - Done! %d\r\n", lBytesReceived);
+         sprintf(TxData, "\r\n - Done! %d\r\n", (int)lBytesReceived);
 			DBG_sendString(TxData, strlen(TxData));
 
          /* Error (maybe the connected socket already shut down the socket?).

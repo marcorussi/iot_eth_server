@@ -475,6 +475,7 @@ static void ksz8851snl_rx_populate_queue( void )
 			if( pxNetworkBuffer == NULL )
 			{
 				//fail...
+            FreeRTOS_printf( ( "ksz8851snl_rx_populate_queue: NetworkBufferDescriptor_t allocation failure\n" ) );
 				configASSERT( 1 == 2 );
 			}
 
@@ -516,6 +517,8 @@ static void ksz8851snl_update()
 			(void)ksz8851snl_init();
 
 			xMicrelDevice.tx_space = ksz8851_reg_read( REG_TX_MEM_INFO ) & TX_MEM_AVAILABLE_MASK;
+
+         FreeRTOS_printf( ("SPI_PDC_TX_ERROR %02X\n", ulValue ) );
 		}
 		break;
 
@@ -538,6 +541,8 @@ static void ksz8851snl_update()
 			(void)ksz8851snl_init();
 
 			xGMACWaitLS( pdMS_TO_TICKS( 5000UL ) );
+
+         FreeRTOS_printf( ("SPI_PDC_RX_ERROR %02X\n", ulValue ) );
 		}
 		break;
 	}
@@ -581,6 +586,9 @@ static void ksz8851snl_update()
 				/* Don't break Micrel state machine, wait for a free descriptor first! */
 				if( xMicrelDevice.rx_ready[ rxHead ] != pdFALSE )
 				{
+               FreeRTOS_printf(  ( "ksz8851snl_update: out of free descriptor! [tail=%u head=%u]\n",
+							            xMicrelDevice.us_rx_tail, 
+                                 rxHead ) );
 					return;
 				}
 
@@ -588,6 +596,7 @@ static void ksz8851snl_update()
 				if( pxNetworkBuffer == NULL )
 				{
 					ksz8851snl_rx_populate_queue();
+               FreeRTOS_printf( ( "ksz8851snl_update: no buffer set [head=%u]\n", rxHead ) );
 					return;
 				}
 
@@ -596,6 +605,7 @@ static void ksz8851snl_update()
 				if( ( ( fhr_status & RX_VALID ) == 0 ) || ( ( fhr_status & RX_ERRORS ) != 0 ) )
 				{
 					ksz8851_reg_setbits(REG_RXQ_CMD, RXQ_CMD_FREE_PACKET);
+               FreeRTOS_printf( ( "ksz8851snl_update: RX packet error!\n" ) );
 
 					/* RX step4-5: check for received frames. */
 					xMicrelDevice.us_pending_frame = ksz8851_reg_read(REG_RX_FRAME_CNT_THRES) >> 8;
@@ -616,6 +626,7 @@ static void ksz8851snl_update()
 					if( xLength == 0 )
 					{
 						ksz8851_reg_setbits( REG_RXQ_CMD, RXQ_CMD_FREE_PACKET );
+                  FreeRTOS_printf( ( "ksz8851snl_update: RX bad len!\n" ) );
 						ulISREvents |= EMAC_IF_ERR_EVENT;
 					}
 					else
@@ -811,6 +822,7 @@ static void ksz8851snl_low_level_init( void )
 	if( false == ksz8851snl_init() )
 	{
 		//fail...
+      FreeRTOS_printf( ( "ksz8851snl_low_level_init: failed to initialize the Micrel driver!\n" ) );
 		configASSERT(0 == 1);
 	}
 
@@ -857,14 +869,21 @@ static uint32_t prvEMACRxPoll( void )
 	IPStackEvent_t xRxEvent = { eNetworkRxEvent, NULL };
 	uint32_t ulReturnValue = 0;
 
-	//TODO: use while(pxNetworkBuffer != NULL) instead of infinite loop and break
 	for( ;; )
 	{
+      EthernetHeader_t *pxEthernetHeader;
 		pxNetworkBuffer = ksz8851snl_low_level_input();
 	
 		if( pxNetworkBuffer == NULL )
 		{
 			break;
+		}
+
+      pxEthernetHeader = ( EthernetHeader_t * ) ( pxNetworkBuffer->pucEthernetBuffer );
+		if( ( pxEthernetHeader->usFrameType != ipIPv4_FRAME_TYPE ) &&
+			( pxEthernetHeader->usFrameType != ipARP_FRAME_TYPE	) )
+		{
+			FreeRTOS_printf( ( "Frame type %02X received\n", pxEthernetHeader->usFrameType ) );
 		}
 
 		ulReturnValue++;
@@ -874,6 +893,8 @@ static uint32_t prvEMACRxPoll( void )
 		if( xSendEventStructToIPTask( &xRxEvent, 100UL ) != pdTRUE )
 		{
 			vReleaseNetworkBufferAndDescriptor( pxNetworkBuffer );
+         iptraceETHERNET_RX_EVENT_LOST();
+			FreeRTOS_printf( ( "prvEMACRxPoll: Can not queue return packet!\n" ) );
 		}
 	}
 
@@ -885,7 +906,10 @@ static void prvEMACHandlerTask( void *pvParameters )
 {
 	TimeOut_t xPhyTime;
 	TickType_t xPhyRemTime;
+   TickType_t xLoggingTime;
 	BaseType_t xResult = 0;
+   UBaseType_t uxLastMinBufferCount = 0;
+   UBaseType_t uxCurrentCount;
 	uint32_t xStatus;
 	const TickType_t ulMaxBlockTime = pdMS_TO_TICKS( EMAC_MAX_BLOCK_TIME_MS );
 
@@ -896,9 +920,34 @@ static void prvEMACHandlerTask( void *pvParameters )
 
 	vTaskSetTimeOutState( &xPhyTime );
 	xPhyRemTime = pdMS_TO_TICKS( PHY_LS_LOW_CHECK_TIME_MS );
+   xLoggingTime = xTaskGetTickCount();
 
 	for( ;; )
 	{
+      uxCurrentCount = uxGetMinimumFreeNetworkBuffers();
+		if( uxLastMinBufferCount != uxCurrentCount )
+		{
+			/* The logging produced below may be helpful
+			while tuning +TCP: see how many buffers are in use. */
+			uxLastMinBufferCount = uxCurrentCount;
+			FreeRTOS_printf(  ( "Network buffers: %lu lowest %lu\n",
+				               uxGetNumberOfFreeNetworkBuffers(), 
+                           uxCurrentCount ) );
+		}
+
+		#if( ipconfigCHECK_IP_QUEUE_SPACE != 0 )
+		{
+			uxCurrentCount = uxGetMinimumIPQueueSpace();
+			if( uxLastMinQueueSpace != uxCurrentCount )
+			{
+				/* The logging produced below may be helpful
+				while tuning +TCP: see how many buffers are in use. */
+				uxLastMinQueueSpace = uxCurrentCount;
+				FreeRTOS_printf( ( "Queue space: lowest %lu\n", uxCurrentCount ) );
+			}
+		}
+		#endif /* ipconfigCHECK_IP_QUEUE_SPACE */
+
 		/* Run the state-machine of the ksz8851 driver. */
 		ksz8851snl_update();
 
@@ -906,6 +955,14 @@ static void prvEMACHandlerTask( void *pvParameters )
 		{
 			/* No events to process now, wait for the next. */
 			ulTaskNotifyTake( pdTRUE, ulMaxBlockTime );
+		}
+
+      if( ( xTaskGetTickCount() - xLoggingTime ) > 10000 )
+		{
+			xLoggingTime += 10000;
+			FreeRTOS_printf(  ( "Now Tx/Rx %7d /%7d\n",
+				               xMicrelDevice.ul_total_tx, 
+                           xMicrelDevice.ul_total_rx ) );
 		}
 
 		if( ( ulISREvents & EMAC_IF_RX_EVENT ) != 0 )
@@ -948,6 +1005,7 @@ static void prvEMACHandlerTask( void *pvParameters )
 			if( ( ulPHYLinkStatus & BMSR_LINK_STATUS ) != ( xStatus & BMSR_LINK_STATUS ) )
 			{
 				ulPHYLinkStatus = xStatus;
+            FreeRTOS_printf( ( "prvEMACHandlerTask: PHY LS now %d\n", ( ulPHYLinkStatus & BMSR_LINK_STATUS ) != 0 ) );
 			}
 
 			vTaskSetTimeOutState( &xPhyTime );
