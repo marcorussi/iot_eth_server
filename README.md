@@ -3,6 +3,7 @@ An Ethernet TCP server based on STM32F411 and KSZ8851SNL.
 
 This project has been developed with a STM32F411E-DISCO board connected to an Ethernet1 Xplained Pro Extension Kit through SPI interface. The firmware has been developed on top of FreeRTOS+TCP. A dedicated 'NetworkInterface' module has been developed to port the TCP/IP stack on KSZ8851SNL through STM32F4's SPI peripheral.
 The default local name is iot_server.local, provided through LLMNR service.
+The firmware can be modified to send any sensors data through the TCP/IP connection as desired. Each data string sent from the server contains date and time based on RTC module of the microcontroller. The default date and time set at initialisation is 01/07/18 10:00:00. 
 
 
 **Install**
@@ -31,14 +32,15 @@ You can use the provided script for connecting to the board on local network. In
     $ cd tools
     $ ./tcp_client 
 
-Instert command 's' for searching your device and then connect with command 'c' by inserting the obtained IP address. Press 'Enter' for receiving last sensors data.
+Insert command 's' for searching your device and then connect with command 'c' by inserting the obtained IP address. Press 'Enter' for receiving last data from the server.
 
 
 **TODO**
 
-* replace dummy sensors data with real ones
 * implement a proper rand function
 * add mDNS service
 * improve README file: add pinout and connections between boards
+* link FreeRTOS printf function to DBG UART module
+* add FreeRTOS printf debug functions to NetworkInterface module
 
 
