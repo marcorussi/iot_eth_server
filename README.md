@@ -5,6 +5,15 @@ This project has been developed with a STM32F411E-DISCO board connected to an Et
 The default local name is iot_server.local, provided through LLMNR service.
 The firmware can be modified to send any sensors data through the TCP/IP connection as desired. Each data string sent from the server contains date and time based on RTC module of the microcontroller. The default date and time set at initialisation is 01/07/18 10:00:00. 
 
+| Signal | MCU port pin | Eth board pin |
+| --- | --- | --- |
+| SPI_SS_A | PB12 | 15 |
+| SPI_MOSI | PB15 | 16 |
+| SPI_MISO | PB14 | 17 |
+| SPI_SCK | PB13 | 18 |
+| INTRN | PD1 | 9 |
+| nRST | PD2 | 6 |
+
 
 **Install**
 
@@ -39,6 +48,6 @@ Insert command 's' for searching your device and then connect with command 'c' b
 
 * implement a proper rand function
 * add mDNS service
-* improve README file: add pinout and connections between boards
+* add nRST management
 
 
